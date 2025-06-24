@@ -1,0 +1,2 @@
+# Naive Spider
+A very basic spider that agressively crawls urls looking for html content using a flow workflow.  This example is particularly interesting based on how the crawler sends back to the downloader creating a graph cycle.
