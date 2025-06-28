@@ -14,10 +14,10 @@ func TestFlow_StartAndSend(t *testing.T) {
 	defer cancel()
 
 	var mu sync.Mutex
-	results := []interface{}{}
+	results := []any{}
 
 	flow := &Node{
-		Method: func(ctx context.Context, inputs ...interface{}) ([]interface{}, error) {
+		Method: func(ctx context.Context, inputs ...any) ([]any, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			results = append(results, inputs...)
@@ -48,7 +48,7 @@ func TestFlow_ErrorHandling(t *testing.T) {
 	errorsHandled := []error{}
 
 	flow := &Node{
-		Method: func(ctx context.Context, inputs ...interface{}) ([]interface{}, error) {
+		Method: func(ctx context.Context, inputs ...any) ([]any, error) {
 			for _, input := range inputs {
 				if input.(int) == 3 {
 					return nil, errors.New("test error")
@@ -56,7 +56,7 @@ func TestFlow_ErrorHandling(t *testing.T) {
 			}
 			return inputs, nil
 		},
-		ErrorMethod: func(ctx context.Context, err error, inputs ...interface{}) {
+		ErrorMethod: func(ctx context.Context, err error, inputs ...any) {
 			mu.Lock()
 			defer mu.Unlock()
 			errorsHandled = append(errorsHandled, err)
@@ -83,10 +83,10 @@ func TestFlow_LinkFlow(t *testing.T) {
 	defer cancel()
 
 	var mu sync.Mutex
-	results := []interface{}{}
+	results := []any{}
 
 	childFlow := &Node{
-		Method: func(ctx context.Context, inputs ...interface{}) ([]interface{}, error) {
+		Method: func(ctx context.Context, inputs ...any) ([]any, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			results = append(results, inputs...)
@@ -96,7 +96,7 @@ func TestFlow_LinkFlow(t *testing.T) {
 	}
 
 	root := &Node{
-		Method: func(ctx context.Context, inputs ...interface{}) ([]interface{}, error) {
+		Method: func(ctx context.Context, inputs ...any) ([]any, error) {
 			return inputs, nil
 		},
 		WorkersCount: 1,
@@ -127,14 +127,14 @@ func TestDirector_LinkDirector(t *testing.T) {
 	results := []int{}
 
 	root := &Node{
-		Method: func(ctx context.Context, inputs ...interface{}) ([]interface{}, error) {
+		Method: func(ctx context.Context, inputs ...any) ([]any, error) {
 			return inputs, nil
 		},
 		WorkersCount: 1,
 	}
 
 	childFlow := &Node{
-		Method: func(ctx context.Context, inputs ...interface{}) ([]interface{}, error) {
+		Method: func(ctx context.Context, inputs ...any) ([]any, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			for _, input := range inputs {
@@ -144,7 +144,7 @@ func TestDirector_LinkDirector(t *testing.T) {
 
 			return inputs, nil
 		},
-		ValidFunc: func(ctx context.Context, inputs ...interface{}) bool {
+		ValidFunc: func(ctx context.Context, inputs ...any) bool {
 			// Example condition: only process even numbers
 			for _, input := range inputs {
 				n := input.(int)
@@ -178,7 +178,7 @@ func TestDirector_ValidFunc(t *testing.T) {
 	ctx := context.Background()
 
 	node := &Node{
-		ValidFunc: func(ctx context.Context, inputs ...interface{}) bool {
+		ValidFunc: func(ctx context.Context, inputs ...any) bool {
 			for _, input := range inputs {
 				if input == 42 {
 					return true
@@ -201,10 +201,10 @@ func TestFlow_Wait(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var mu sync.Mutex
-	results := []interface{}{}
+	results := []any{}
 
 	childFlow := &Node{
-		Method: func(ctx context.Context, inputs ...interface{}) ([]interface{}, error) {
+		Method: func(ctx context.Context, inputs ...any) ([]any, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			results = append(results, inputs...)
@@ -214,7 +214,7 @@ func TestFlow_Wait(t *testing.T) {
 	}
 
 	root := &Node{
-		Method: func(ctx context.Context, inputs ...interface{}) ([]interface{}, error) {
+		Method: func(ctx context.Context, inputs ...any) ([]any, error) {
 			return inputs, nil
 		},
 		WorkersCount: 1,

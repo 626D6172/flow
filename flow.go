@@ -1,3 +1,4 @@
+// Package flow is a utility for creating and managing go routine workflows
 package flow
 
 import (
@@ -10,13 +11,13 @@ type Node struct {
 	wg        sync.WaitGroup
 	completed bool
 
-	EnableGoRoutineSend bool                                                         // If true, sends data to the next nodes in a goroutine.
-	ErrorMethod         func(context.Context, error, ...interface{})                 // Error handling method, called if the Method function returns an error.
-	Nodes               []*Node                                                      // Linked nodes that will be executed after the current node's method completes.
-	Method              func(context.Context, ...interface{}) ([]interface{}, error) // Method function that processes input data and returns output data to the next nodes.
-	Queue               chan []interface{}                                           // Channel for sending data to the workers.  Do not modify this field directly.
-	ValidFunc           func(context.Context, ...interface{}) bool                   // Validation function that checks if the input data is valid for processing by the Method function.
-	WorkersCount        int                                                          // Number of worker goroutines that will process the input data simultaneously.
+	EnableGoRoutineSend bool                                                 // If true, sends data to the next nodes in a goroutine.
+	ErrorMethod         func(context.Context, error, ...any)                 // Error handling method, called if the Method function returns an error.
+	Nodes               []*Node                                              // Linked nodes that will be executed after the current node's method completes.
+	Method              func(context.Context, ...any) ([]interface{}, error) // Method function that processes input data and returns output data to the next nodes.
+	Queue               chan []any                                           // Channel for sending data to the workers.  Do not modify this field directly.
+	ValidFunc           func(context.Context, ...any) bool                   // Validation function that checks if the input data is valid for processing by the Method function.
+	WorkersCount        int                                                  // Number of worker goroutines that will process the input data simultaneously.
 }
 
 // Start initializes the flow and starts the worker goroutines for your flow node.
@@ -26,7 +27,7 @@ func (f *Node) Start(ctx context.Context) {
 	}
 
 	f.ctx = ctx
-	f.Queue = make(chan []interface{}, f.WorkersCount)
+	f.Queue = make(chan []any, f.WorkersCount)
 	for w := 0; w < f.WorkersCount; w++ {
 		f.wg.Add(1)
 		go f.worker()
@@ -40,7 +41,7 @@ func (f *Node) Start(ctx context.Context) {
 }
 
 // Send sends data to the flow node's queue for processing.
-func (f *Node) Send(inter ...interface{}) {
+func (f *Node) Send(inter ...any) {
 	select {
 	case <-f.ctx.Done():
 		return
@@ -55,7 +56,7 @@ func (f *Node) Link(flows ...*Node) {
 	f.Nodes = append(f.Nodes, flows...)
 }
 
-func (f *Node) isValid(ctx context.Context, inter ...interface{}) bool {
+func (f *Node) isValid(ctx context.Context, inter ...any) bool {
 	return f.ValidFunc == nil || f.ValidFunc(ctx, inter...)
 }
 
@@ -87,7 +88,6 @@ func (f *Node) worker() {
 		case interfaces := <-f.Queue:
 			methodCtx := f.ctx
 			resp, err := f.Method(methodCtx, interfaces...)
-
 			if err != nil {
 				if f.ErrorMethod != nil {
 					f.ErrorMethod(methodCtx, err, interfaces...)
