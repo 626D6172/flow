@@ -14,11 +14,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/626D6172/flow"
+	"github.com/bmarse/flow"
 )
 
-var seen = map[string]struct{}{} // To keep track of visited URLs
-var seenLock sync.Mutex
+var (
+	seen     = map[string]struct{}{} // To keep track of visited URLs
+	seenLock sync.Mutex
+)
 
 func markSeen(url string) {
 	seenLock.Lock()
@@ -195,7 +197,6 @@ func main() {
 				log.Default().Printf("Printer Queue length: %d\n", len(printer.Queue))
 			}
 		}
-
 	}(ctx)
 
 	// Send the seed url

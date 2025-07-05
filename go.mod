@@ -1,3 +1,3 @@
-module github.com/626D6172/flow
+module github.com/bmarse/flow
 
 go 1.21.5

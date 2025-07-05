@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/626D6172/flow"
+	"github.com/bmarse/flow"
 )
 
 // root is the method for the root flow node.
